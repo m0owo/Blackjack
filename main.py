@@ -1,5 +1,5 @@
 import pygame
-from game import Game
+from gamev2 import Game
 from menu import Menu
 from restart import Restart
 from setting import Setting
