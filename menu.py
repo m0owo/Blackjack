@@ -11,10 +11,10 @@ class Menu:
         # Draw start and settings buttons
         self.screen.fill('black')
         title_text = self.font.render("Main Menu", True, 'white')
-        self.screen.blit(title_text, (150, 150))
+        self.screen.blit(title_text, (175, 150))
 
         pygame.draw.rect(self.screen, 'white', self.start_button)
-        self.screen.blit(self.font.render("Start Game", True, 'black'), (160, 275))
+        self.screen.blit(self.font.render("Start Game", True, 'black'), (175, 275))
 
         pygame.draw.rect(self.screen, 'white', self.settings_button)
-        self.screen.blit(self.font.render("Settings", True, 'black'), (185, 425))
+        self.screen.blit(self.font.render("Settings", True, 'black'), (200, 425))

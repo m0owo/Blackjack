@@ -64,6 +64,14 @@ while running:
             if event.type == pygame.MOUSEBUTTONUP:
                 if setting.back_button.collidepoint(event.pos):
                     setting_ = False  # Go back to menu
+                if setting.add_deck_button.collidepoint(event.pos):
+                    setting.add_deck()
+                if setting.minus_deck_button.collidepoint(event.pos):
+                    setting.minus_deck()
+                if setting.add_round_button.collidepoint(event.pos):
+                    setting.add_round()
+                if setting.minus_round_button.collidepoint(event.pos):
+                    setting.minus_round()
 
     pygame.display.update()
     clock.tick(60)
