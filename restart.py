@@ -1,4 +1,10 @@
 import pygame
+
+PLAYER_BUST = 1
+PLAYER_WIN = 2
+DEALER_WIN = 3
+TIE = 4
+
 class Restart:
     def __init__(self, screen):
         self.screen = screen
@@ -21,13 +27,13 @@ class Restart:
 
         # Display the result of the game
         if self.game_result is not None:
-            if self.game_result == 1:
+            if self.game_result == PLAYER_BUST:
                 outcome_text = self.font.render("You Lost!", True, 'red')  # Player loses
-            elif self.game_result == 2:
+            elif self.game_result == PLAYER_WIN:
                 outcome_text = self.font.render("You Win!", True, 'green')  # Player wins
-            elif self.game_result == 3:
+            elif self.game_result == DEALER_WIN:
                 outcome_text = self.font.render("Dealer Wins!", True, 'red')  # Dealer wins
-            elif self.game_result == 4:
+            elif self.game_result == TIE:
                 outcome_text = self.font.render("It's a Draw!", True, 'yellow')  # Draw
             self.screen.blit(outcome_text, (200, 150))  # Display message at the center
 

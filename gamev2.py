@@ -1,6 +1,15 @@
 import pygame
 from pyswip import Prolog
 
+PLAYER_BUST = 1
+PLAYER_WIN = 2
+DEALER_WIN = 3
+TIE = 4
+
+PLAYER_W_RECORD = 0
+DEALER_W_RECORD = 1
+TIE_RECORD = 2
+
 class Game:
     def __init__(self, screen):
         self.screen = screen
@@ -52,7 +61,7 @@ class Game:
                     
                     if self.player_score > 21:
                         self.hand_active = False
-                        self.outcome = 1  # Player busts
+                        self.outcome = PLAYER_BUST  # Player busts
                         
             elif self.stand_button.collidepoint(event.pos):
                 if self.hand_active:
@@ -93,20 +102,20 @@ class Game:
                 winner = result["Result"]
                 
                 if winner == "dealer_wins":
-                    self.outcome = 1 if self.player_score > 21 else 3
+                    self.outcome = PLAYER_BUST if self.player_score > 21 else DEALER_WIN
                 elif winner == "player_wins":
-                    self.outcome = 2
+                    self.outcome = PLAYER_WIN
                 else:  # draw
-                    self.outcome = 4
+                    self.outcome = TIE
                     
             self.game_result = self.outcome
             
-            if self.outcome == 1 or self.outcome == 3:
-                self.records[1] += 1  # Dealer win
-            elif self.outcome == 2:
-                self.records[0] += 1  # Player win
+            if self.outcome == PLAYER_BUST or self.outcome == DEALER_WIN:
+                self.records[DEALER_W_RECORD] += 1  # Dealer win
+            elif self.outcome == PLAYER_WIN:
+                self.records[PLAYER_W_RECORD] += 1  # Player win
             else:
-                self.records[2] += 1  # Draw
+                self.records[TIE_RECORD] += 1  # Draw
             
             self.add_score = False
 

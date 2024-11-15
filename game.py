@@ -2,6 +2,15 @@ import pygame
 import random
 import copy
 
+PLAYER_BUST = 1
+PLAYER_WIN = 2
+DEALER_WIN = 3
+TIE = 4
+
+PLAYER_W_RECORD = 0
+DEALER_W_RECORD = 1
+TIE_RECORD = 2
+
 class Game:
     def __init__(self, screen):
         self.screen = screen
@@ -39,7 +48,7 @@ class Game:
                     self.player_score = self.calculate_score(self.my_hand)
                     if self.player_score > 21:  # Check if player busts
                         self.hand_active = False
-                        self.outcome = 1  # Player busts
+                        self.outcome = PLAYER_BUST  # Player busts
             elif self.stand_button.collidepoint(event.pos):
                 if self.hand_active:
                     self.hand_active = False
@@ -91,23 +100,23 @@ class Game:
     def check_endgame(self):
         if not self.hand_active and self.dealer_score >= 17:
             if self.player_score > 21:
-                self.outcome = 1  # Player busts
+                self.outcome = PLAYER_BUST
             elif self.dealer_score < self.player_score <= 21 or self.dealer_score > 21:
-                self.outcome = 2  # Player wins
+                self.outcome = PLAYER_WIN  # / Dealer busts
             elif self.player_score < self.dealer_score <= 21:
-                self.outcome = 3  # Dealer wins
+                self.outcome = DEALER_WIN  # Dealer wins
             else:
-                self.outcome = 4  # Tie game
+                self.outcome = TIE  # Tie game
                 
             # Store the result to be used on the restart screen
             self.game_result = self.outcome
             
-            if self.outcome == 1 or self.outcome == 3:
-                self.records[1] += 1  # Dealer win
-            elif self.outcome == 2:
-                self.records[0] += 1  # Player win
+            if self.outcome == PLAYER_BUST or self.outcome == DEALER_WIN:
+                self.records[DEALER_W_RECORD] += 1  # Dealer win
+            elif self.outcome == PLAYER_WIN:
+                self.records[PLAYER_W_RECORD] += 1  # Player win
             else:
-                self.records[2] += 1  # Draw
+                self.records[TIE_RECORD] += 1  # Draw
             
             self.add_score = False  # Prevents updating records again
         return self.outcome, self.records, self.add_score
@@ -144,13 +153,13 @@ class Game:
         
         # Display win/loss/draw message when game ends
         if result != 0:
-            if result == 1:
+            if result == PLAYER_BUST:
                 outcome_text = self.font.render("You Lost!", True, 'red')  # Player loses
-            elif result == 2:
+            elif result == PLAYER_WIN:
                 outcome_text = self.font.render("You Win!", True, 'green')  # Player wins
-            elif result == 3:
+            elif result == DEALER_WIN:
                 outcome_text = self.font.render("Dealer Wins!", True, 'red')  # Dealer wins
-            elif result == 4:
+            elif result == TIE:
                 outcome_text = self.font.render("It's a Draw!", True, 'yellow')  # Draw
 
             self.screen.blit(outcome_text, (200, 150))  # Display message at the center
