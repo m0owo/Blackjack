@@ -10,8 +10,8 @@ pygame.display.set_caption("Blackjack Game")
 
 menu = Menu(screen)
 restart = Restart(screen)
-game = Game(screen)
 setting = Setting(screen)
+game = Game(screen, setting.get_rounds(), setting.get_decks())
 
 clock = pygame.time.Clock()
 
@@ -21,49 +21,71 @@ in_game = False
 game_over = False
 
 while running:
-    screen.fill('black')  # Clear the screen
+    # clear the screen 
+    screen.fill('black')
 
-    # Determine which page to display based on flags
+    # determine which page
     if not in_game and not setting_:
+        # main menu
         menu.draw()
     elif in_game and not game_over:
+        # gameplay
         game.draw()
     elif game_over:
+        # results to display on restart screen 
         restart.set_result(game.game_result)
+        restart.set_player_hands(game.player_hands)
+        restart.set_dealer_hands(game.dealer_hands)
         restart.draw()
     elif setting_:
+        # settings page
         setting.draw()
 
+    # mouse clicks
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-        # Handle menu navigation and mouse clicks
+        # main menu mouse clicks
         if not in_game and not setting_:
             if event.type == pygame.MOUSEBUTTONUP:
+                # click start game
                 if menu.start_button.collidepoint(event.pos):
                     in_game = True
                     game.reset_game()
+                # click settings
                 elif menu.settings_button.collidepoint(event.pos): 
                     setting_ = True  
-
+        # game play mouse clicks
         elif in_game and not game_over:
-            if game.handle_event(event):  # Handle game events
-                game_over = True  # Game over state
-        
+            # game has run its course
+            if game.handle_event(event):
+                restart.set_result(game.game_result)
+                game_over = True 
         elif game_over:
             if event.type == pygame.MOUSEBUTTONUP:
+                # click retry
                 if restart.retry_button.collidepoint(event.pos):
                     game.reset_game()
                     game_over = False
+                # click menu
                 elif restart.menu_button.collidepoint(event.pos):
                     in_game = False
                     game_over = False
-
+                # click add round
+                elif restart.next_round_button.collidepoint(event.pos):
+                    restart.next_round()
+                elif restart.prev_round_button.collidepoint(event.pos):
+                    restart.prev_round()
+        # settings clicks
         elif setting_:
             if event.type == pygame.MOUSEBUTTONUP:
+                # go back to menu and implement settings
                 if setting.back_button.collidepoint(event.pos):
-                    setting_ = False  # Go back to menu
+                    setting_ = False 
+                    game.set_rounds(setting.get_rounds())
+                    game.set_decks(setting.get_decks())
+                # increase/decrease decks/rounds
                 if setting.add_deck_button.collidepoint(event.pos):
                     setting.add_deck()
                 if setting.minus_deck_button.collidepoint(event.pos):

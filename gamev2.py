@@ -11,76 +11,121 @@ DEALER_W_RECORD = 1
 TIE_RECORD = 2
 
 class Game:
-    def __init__(self, screen):
-        self.screen = screen
-        self.prolog = Prolog()
+    def __init__(self, screen, rounds, decks):
         # Load the Prolog file
+        self.prolog = Prolog()
         self.prolog.consult("core_logic.pl")
         
+        # Draw the screen
+        self.screen = screen
         self.font = pygame.font.Font('freesansbold.ttf', 44)
         self.smaller_font = pygame.font.Font('freesansbold.ttf', 36)
-        self.records = [0] * 8
-        self.add_score = False 
-        self.reset_game()
-        self.game_result = None
+        self.deal = pygame.draw.rect(self.screen, 'white', [150, 220, 300, 100], 0, 5)
 
+        # Init the game
+        self.add_score = False 
+        self.game_result = 0
+        self.rounds = rounds # number of rounds in the game
+        self.decks = decks # number of decks used in the game
+        self.reset_game()
+
+    def get_rounds(self):
+        return self.rounds
+    
+    def get_decks(self):
+        return self.decks
+    
+    def set_rounds(self, rounds):
+        self.rounds = rounds
+
+    def set_decks(self, decks):
+        self.decks = decks
+    
     def reset_game(self):
+        self.my_hand = [] # current cards in player hand
+        self.dealer_hand = [] # current cards in dealer hand
+        self.player_score = 0 # current player hand score
+        self.dealer_score = 0 # current dealer hand score
+        self.outcome = 0 # outcome of the current round
+        self.active = True
+        self.reveal_dealer = False
+        self.hand_active = True
+        self.initial_deal = True
+        self.records = [0] * 3 # number of player wins, dealer wins, and ties
+        self.player_hands = [] # total in player's hands from all rounds
+        self.dealer_hands = [] # total in dealer's hands from all rounds
+    
+    def reset_round(self):
         self.my_hand = []
         self.dealer_hand = []
         self.player_score = 0
         self.dealer_score = 0
         self.outcome = 0
-        self.active = True
+        self.active =  True
         self.reveal_dealer = False
         self.hand_active = True
         self.initial_deal = True
-        self.records = [0] * 8
+
+    # game running
+    def handle_event(self, event):
+        if self.rounds > 0:
+            if self.initial_deal:
+                self.initial_deal_func()
+
+            if self.outcome == 0 and event.type == pygame.MOUSEBUTTONUP: # the round has no outcome yet and clicked button
+                if self.hit_button.collidepoint(event.pos): # player hits
+                    if self.hand_active: 
+                        # Draw one card using Prolog
+                        for card in self.prolog.query("draw_card(Card)"):
+                            new_card = card["Card"]
+                            self.my_hand.append(new_card)
+                            
+                        # Calculate new score
+                        self.player_score = self.calculate_hand_score(self.my_hand)
+                        
+                        if self.player_score > 21:
+                            self.hand_active = False
+                            self.outcome = PLAYER_BUST  # Player busts
+                                
+                elif self.stand_button.collidepoint(event.pos):
+                    if self.hand_active:
+                        self.hand_active = False
+                        self.dealer_turn()
+
+            self.check_winner()
+        self.game_result = self.calculate_game_result()
+
+        return self.outcome if self.outcome != 0 and self.rounds <= 0 else None
+    
+    def calculate_game_result(self):
+        if self.records[DEALER_W_RECORD] > self.records[PLAYER_W_RECORD]:
+            print("game result is 1")
+            return 1
+        elif self.records[PLAYER_W_RECORD] > self.records[DEALER_W_RECORD]:
+            print("game result is 2")
+            return 2
+        return 3
+
+    def initial_deal_func(self):
+        # get initial hands from prolog
+        for result in self.prolog.query("initial_deal(PlayerHand, DealerHand)"):
+            self.my_hand = list(result["PlayerHand"])
+            self.dealer_hand = list(result["DealerHand"])
+        
+        # calculate the initial scores
+        self.player_score = self.calculate_hand_score(self.my_hand)
+        self.dealer_score = self.calculate_hand_score(self.dealer_hand)
+
+        # no long initial deal
+        self.initial_deal = False
 
     def calculate_hand_score(self, hand):
-        # Convert Python list to Prolog list format
+        # convert list to prolog format
         prolog_hand = str(hand).replace('[', '[').replace(']', ']')
         query = f"calculate_score({prolog_hand}, Score)"
         for result in self.prolog.query(query):
             return result["Score"]
         return 0
-
-    def handle_event(self, event):
-        if self.initial_deal:
-            self.initial_deal_func()
-
-        if self.outcome == 0 and event.type == pygame.MOUSEBUTTONUP:
-            if self.hit_button.collidepoint(event.pos):
-                if self.hand_active:
-                    # Draw one card using Prolog
-                    for card in self.prolog.query("draw_card(Card)"):
-                        new_card = card["Card"]
-                        self.my_hand.append(new_card)
-                    
-                    # Calculate new score
-                    self.player_score = self.calculate_hand_score(self.my_hand)
-                    
-                    if self.player_score > 21:
-                        self.hand_active = False
-                        self.outcome = PLAYER_BUST  # Player busts
-                        
-            elif self.stand_button.collidepoint(event.pos):
-                if self.hand_active:
-                    self.hand_active = False
-                    self.dealer_turn()
-
-        self.check_winner()
-        return self.outcome if self.outcome != 0 else None
-
-    def initial_deal_func(self):
-        # Get initial hands from Prolog
-        for result in self.prolog.query("initial_deal(PlayerHand, DealerHand)"):
-            self.my_hand = list(result["PlayerHand"])
-            self.dealer_hand = list(result["DealerHand"])
-        
-        # Calculate initial scores
-        self.player_score = self.calculate_hand_score(self.my_hand)
-        self.dealer_score = self.calculate_hand_score(self.dealer_hand)
-        self.initial_deal = False
 
     def dealer_turn(self):
         self.reveal_dealer = True
@@ -96,20 +141,22 @@ class Game:
 
     def check_winner(self):
         if not self.hand_active:
-            # Use Prolog to determine winner based on scores
+            # Determine the winner based on current hand scores in Prolog
             query = f"determine_winner({self.player_score}, {self.dealer_score}, Result)"
             for result in self.prolog.query(query):
                 winner = result["Result"]
-                
                 if winner == "dealer_wins":
                     self.outcome = PLAYER_BUST if self.player_score > 21 else DEALER_WIN
                 elif winner == "player_wins":
                     self.outcome = PLAYER_WIN
                 else:  # draw
                     self.outcome = TIE
-                    
-            self.game_result = self.outcome
-            
+
+            # Append the hand scores to the hands records
+            self.player_hands.append(self.player_score)
+            self.dealer_hands.append(self.dealer_score)
+
+            # Append the round outcome to the records
             if self.outcome == PLAYER_BUST or self.outcome == DEALER_WIN:
                 self.records[DEALER_W_RECORD] += 1  # Dealer win
             elif self.outcome == PLAYER_WIN:
@@ -117,7 +164,15 @@ class Game:
             else:
                 self.records[TIE_RECORD] += 1  # Draw
             
-            self.add_score = False
+            # Decrement rounds count
+            self.rounds -= 1
+            print("rounds left", self.rounds)
+
+            # If no more rounds are left, end the game
+            if self.rounds <= 0:
+                self.active = False  # Set game to inactive (no more rounds)
+                self.outcome = self.calculate_game_result()  # Calculate final result
+
 
     def draw(self):
         self.draw_cards(self.my_hand, self.dealer_hand, self.reveal_dealer)
@@ -145,18 +200,6 @@ class Game:
 
     def draw_game(self, act, record, result):
         button_list = []
-        
-        if result != 0:
-            if result == 1:
-                outcome_text = self.font.render("You Lost!", True, 'red')
-            elif result == 2:
-                outcome_text = self.font.render("You Win!", True, 'green')
-            elif result == 3:
-                outcome_text = self.font.render("Dealer Wins!", True, 'red')
-            elif result == 4:
-                outcome_text = self.font.render("It's a Draw!", True, 'yellow')
-
-            self.screen.blit(outcome_text, (200, 150))
 
         if not act:
             deal = pygame.draw.rect(self.screen, 'white', [150, 20, 300, 100], 0, 5)
@@ -181,12 +224,29 @@ class Game:
             self.screen.blit(score_text, (15, 840))
 
         if result != 0:
-            self.screen.blit(self.font.render(str(self.records[result]), True, 'white'), (15, 25))
-            deal = pygame.draw.rect(self.screen, 'white', [150, 220, 300, 100], 0, 5)
-            pygame.draw.rect(self.screen, 'green', [150, 220, 300, 100], 3, 5)
-            deal_text = self.font.render('NEW HAND', True, 'black')
-            self.screen.blit(deal_text, (165, 250))
-            button_list.append(deal)
+            print("here", result)
+            if result == PLAYER_BUST:
+                print("here1", result)
+                outcome_text = self.font.render("You Lost!", True, 'red')
+            elif result == PLAYER_WIN:
+                print("here2", result)
+                outcome_text = self.font.render("You Win!", True, 'green')
+            elif result == DEALER_WIN:
+                print("here3", result)
+                outcome_text = self.font.render("Dealer Wins!", True, 'red')
+            elif result == TIE:
+                print("here4", result)
+                outcome_text = self.font.render("It's a Draw!", True, 'yellow')
+            self.screen.blit(outcome_text, (200, 150))
+
+            self.reset_round()
+
+            # self.screen.blit(self.font.render(str(self.records[result]), True, 'white'), (15, 25))
+            # self.deal = pygame.draw.rect(self.screen, 'white', [150, 220, 300, 100], 0, 5)
+            # pygame.draw.rect(self.screen, 'green', [150, 220, 300, 100], 3, 5)
+            # deal_text = self.font.render('NEW HAND', True, 'black')
+            # self.screen.blit(deal_text, (165, 250))
+            # button_list.append(self.deal)
 
         return button_list
     

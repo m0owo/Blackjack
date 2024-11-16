@@ -55,6 +55,7 @@ class Game:
                     self.dealer_turn()
 
         self.outcome, self.records, _ = self.check_endgame()
+        
         return self.outcome if self.outcome != 0 else None
 
     def initial_deal_func(self):

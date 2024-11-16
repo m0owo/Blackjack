@@ -14,12 +14,20 @@ class Setting:
         self.add_deck_button = pygame.Rect(450, 400, 50, 50)
         self.back_button = pygame.Rect(150, 500, 300, 100) 
     
+    def get_rounds(self):
+        print('getting set rounds', self.rounds)
+        return self.rounds
+    
     def add_round(self):
         self.rounds += 1
     
     def minus_round(self):
         if self.rounds > 1:
             self.rounds -= 1
+
+    def get_decks(self):
+        print('getting set decks', self.decks)
+        return self.decks
 
     def add_deck(self):
         self.decks += 1
