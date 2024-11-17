@@ -61,7 +61,7 @@ class Game:
         self.records = [0] * 3 # number of player wins, dealer wins, and ties
         self.player_hands = [] # total in player's hands from all rounds
         self.dealer_hands = [] # total in dealer's hands from all rounds
-        # self.rounds = self.rounds
+        self.turn = "player"
 
         # Initialize the deck with 2 decks
         list(self.prolog.query(f"initialize_deck({self.decks})"))
@@ -104,7 +104,7 @@ class Game:
 
             if self.outcome == 0 and event.type == pygame.MOUSEBUTTONUP: # the round has no outcome yet and clicked button
                 if self.hit_button.collidepoint(event.pos): # player hits
-                    if self.hand_active: 
+                    if self.turn == "player" and self.hand_active: 
                         # Draw one card using Prolog
                         for card in self.prolog.query("draw_card(Card)"):
                             new_card = card["Card"]
@@ -116,13 +116,20 @@ class Game:
                         if self.player_score > 21:
                             self.hand_active = False
                             self.outcome = PLAYER_BUST  # Player busts
+                        else:
+                            self.turn = "dealer"  # Switch turn to dealer
                                 
                 elif self.stand_button.collidepoint(event.pos):
-                    if self.hand_active:
+                    if self.turn == "player" and self.hand_active:
                         self.hand_active = False
+                        self.turn = "dealer"  # Switch turn to dealer
                         self.dealer_turn()
 
+            elif self.turn == "dealer":
+                self.dealer_turn()
+
             self.check_winner()
+
         self.game_result = self.calculate_game_result()
 
         return self.outcome if self.outcome != 0 and self.rounds <= 0 else None
@@ -174,8 +181,6 @@ class Game:
     
     def dealer_turn(self):
         self.reveal_dealer = True
-
-        # Convert dealer's hand to Prolog-compatible format
         dealer_hand = str(self.dealer_hand).replace('[', '[').replace(']', ']')
         dealer_score = self.dealer_score
         player_score = self.player_score
@@ -191,7 +196,7 @@ class Game:
         # Convert the deck into Prolog-compatible format
         prolog_deck = str(current_deck).replace('[', '[').replace(']', ']')
 
-        while True:
+        while self.turn == "dealer":
             # Query Prolog for the dealer's action
             query = f"dealer_decision({self.difficulty}, {dealer_hand}, {dealer_score}, {player_score}, {prolog_deck}, Action)"
             print(f"Querying dealer_decision with: {query}")
@@ -214,10 +219,12 @@ class Game:
                     # Recalculate the dealer's score
                     self.dealer_score = self.calculate_hand_score(self.dealer_hand)
                     print(f"Dealer hits and gets: {new_card}, new score: {self.dealer_score}")
-
+                    self.turn = "player"
+                    
                     # Check if the dealer busts
                     if self.dealer_score > 21:
                         print("Dealer busts!")
+                        self.turn = "player"  # Switch turn to player
                         break
                 else:
                     print("Error: No cards left in the deck.")
@@ -225,12 +232,11 @@ class Game:
 
             elif action == "stand":
                 print("Dealer stands.")
+                self.turn = "player"  # Switch turn to player
                 break
             else:
                 print("Unexpected action:", action)
                 break
-
-
 
     def check_winner(self):
         if not self.hand_active:
