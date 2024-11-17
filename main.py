@@ -51,6 +51,8 @@ while running:
             if event.type == pygame.MOUSEBUTTONUP:
                 # click start game
                 if menu.start_button.collidepoint(event.pos):
+                    game.set_rounds(setting.get_rounds())
+                    game.set_decks(setting.get_decks())
                     in_game = True
                     game.reset_game()
                 # click settings
@@ -66,12 +68,21 @@ while running:
             if event.type == pygame.MOUSEBUTTONUP:
                 # click retry
                 if restart.retry_button.collidepoint(event.pos):
-                    game.reset_game()
+                    print("Retry button clicked")
                     game_over = False
+                    in_game = True
+                    print("Setting rounds and decks")
+                    game.set_rounds(setting.get_rounds())
+                    game.set_decks(setting.get_decks())
+                    print("Resetting game")
+                    game.reset_game()
+                    print("Game reset complete")
+
                 # click menu
                 elif restart.menu_button.collidepoint(event.pos):
-                    in_game = False
                     game_over = False
+                    in_game = False
+                    
                 # click add round
                 elif restart.next_round_button.collidepoint(event.pos):
                     restart.next_round()
