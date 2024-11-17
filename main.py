@@ -11,7 +11,7 @@ pygame.display.set_caption("Blackjack Game")
 menu = Menu(screen)
 restart = Restart(screen)
 setting = Setting(screen)
-game = Game(screen, setting.get_rounds(), setting.get_decks())
+game = Game(screen, setting.get_rounds(), setting.get_decks(), setting.get_difficulty())
 
 clock = pygame.time.Clock()
 
@@ -105,6 +105,10 @@ while running:
                     setting.add_round()
                 if setting.minus_round_button.collidepoint(event.pos):
                     setting.minus_round()
+                if setting.left_difficulty_button.collidepoint(event.pos):
+                    setting.change_difficulty_left()
+                if setting.right_difficulty_button.collidepoint(event.pos):
+                    setting.change_difficulty_right()
 
     pygame.display.update()
     clock.tick(60)

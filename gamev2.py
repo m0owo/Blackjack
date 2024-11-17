@@ -11,7 +11,7 @@ DEALER_W_RECORD = 1
 TIE_RECORD = 2
 
 class Game:
-    def __init__(self, screen, rounds, decks):
+    def __init__(self, screen, rounds, decks, difficulty):
         # Load the Prolog file
         self.prolog = Prolog()
         self.prolog.consult("core_logic.pl")
@@ -27,6 +27,7 @@ class Game:
         self.game_result = 0
         self.rounds = rounds # number of rounds in the game
         self.decks = decks # number of decks used in the game
+        self.difficulty = difficulty
         self.reset_game()
 
     def get_rounds(self):
@@ -146,8 +147,11 @@ class Game:
         # convert list to prolog format
         prolog_hand = str(hand).replace('[', '[').replace(']', ']')
         query = f"calculate_score({prolog_hand}, Score)"
+        print(f"Query: {query}")
         for result in self.prolog.query(query):
+            print(f"Prolog Result: {result}")
             return result["Score"]
+        print("Failed to calculate score")
         return 0
 
     def dealer_turn(self):
