@@ -78,6 +78,17 @@ class Game:
         self.hand_active = True
         self.initial_deal = True
 
+        # Initialize the deck with 2 decks
+        list(self.prolog.query(f"initialize_deck({self.decks})"))
+
+        # Now query the current deck
+        for result in self.prolog.query("current_deck(Cards)"):
+            print("Current Deck:", result["Cards"])
+            
+         # Re-initialize the deck in Prolog
+        list(self.prolog.query(f"initialize_deck({self.decks})"))
+        print("Game state reset")
+
     # game running
     def handle_event(self, event):
         if self.rounds > 0:
