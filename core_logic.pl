@@ -150,10 +150,43 @@ adjust_ace_value(NumAces, Score, AdjustedScore) :-
 adjust_ace_value(_, Score, Score) :-
     Score =< 21.
 
-% Draw a random card
+:- dynamic current_deck/1.
+
+% initialize the deck with specified number of decks
+initialize_deck(NumDecks) :-
+    retractall(current_deck(_)),
+    generate_decks(NumDecks, FullDeck),
+    assertz(current_deck(FullDeck)).
+
+% Generate the total cards in the game
+generate_decks(NumDecks, FullDeck) :-
+    SingleDeck = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A',
+                  '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A',
+                  '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A',
+                  '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'],
+    replicate_deck(SingleDeck, NumDecks, FullDeck).
+
+% Replicate a single deck the specified number of times
+replicate_deck(_, 0, []).
+replicate_deck(SingleDeck, NumDecks, FullDeck) :-
+    NumDecks > 0,
+    NewNumDecks is NumDecks - 1,
+    replicate_deck(SingleDeck, NewNumDecks, Rest),
+    append(SingleDeck, Rest, FullDeck).
+
+
+# % Draw a random card
+# draw_card(Card) :-
+#     Cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'],
+#     random_member(Card, Cards).
+
+% Draw a random card and remove it from current deck
 draw_card(Card) :-
-    Cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'],
-    random_member(Card, Cards).
+    current_deck(Cards),
+    random_member(Card, Cards),
+    delete(Cards, Card, NewDeck),
+    retractall(current_deck(_)),
+    assertz(current_deck(NewDeck)).
 
 % Dealers turn based on fixed rules
 dealer_play(DealerHand, DealerScore, FinalHand, FinalScore) :-

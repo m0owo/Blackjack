@@ -54,6 +54,13 @@ class Game:
         self.records = [0] * 3 # number of player wins, dealer wins, and ties
         self.player_hands = [] # total in player's hands from all rounds
         self.dealer_hands = [] # total in dealer's hands from all rounds
+
+        # Initialize the deck with 2 decks
+        list(self.prolog.query(f"initialize_deck({self.decks})"))
+
+        # Now query the current deck
+        for result in self.prolog.query("current_deck(Cards)"):
+            print("Current Deck:", result["Cards"])
     
     def reset_round(self):
         self.my_hand = []
