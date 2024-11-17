@@ -1,0 +1,22 @@
+Heuristics: A heuristic is a strategy to estimate the "best" move without exhaustively searching all possible outcomes.
+In Blackjack, heuristics can include:
+-Dealer's current score.
+-Number of remaining cards in the deck and their distribution.
+-Player's visible card(s).
+-Current round (e.g., early rounds favor conservative plays).
+
+Search Problem: The dealer's decision (hit or stand) can be framed as a search problem:
+State: Current hand and score of the dealer, visible player cards, and deck status.
+Actions: "Hit" or "Stand."
+Goal: Maximize the likelihood of winning without exceeding 21.
+
+Evaluation Function: Used to evaluate the desirability of a given state or action. 
+For example:
+-Reward staying below or near 21.
+-Penalize exceeding 21.
+-Consider probability of better outcomes based on the deck composition.
+
+Difficulty Levels:
+Easy: Dealer hits on any score <17, ignoring heuristics.
+Medium: Dealer considers simple heuristics (e.g., probability of busting based on current deck).
+Hard: Dealer uses an advanced evaluation function incorporating game round, player hand, and deck composition.

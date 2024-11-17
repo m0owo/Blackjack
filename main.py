@@ -53,6 +53,7 @@ while running:
                 if menu.start_button.collidepoint(event.pos):
                     game.set_rounds(setting.get_rounds())
                     game.set_decks(setting.get_decks())
+                    game.set_difficulty(setting.get_difficulty())
                     in_game = True
                     game.reset_game()
                 # click settings
@@ -74,6 +75,7 @@ while running:
                     print("Setting rounds and decks")
                     game.set_rounds(setting.get_rounds())
                     game.set_decks(setting.get_decks())
+                    game.set_difficulty(setting.get_difficulty())
                     print("Resetting game")
                     game.reset_game()
                     print("Game reset complete")
@@ -96,6 +98,7 @@ while running:
                     setting_ = False 
                     game.set_rounds(setting.get_rounds())
                     game.set_decks(setting.get_decks())
+                    game.set_decks(setting.get_difficulty())
                 # increase/decrease decks/rounds
                 if setting.add_deck_button.collidepoint(event.pos):
                     setting.add_deck()

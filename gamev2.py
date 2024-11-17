@@ -35,13 +35,19 @@ class Game:
     
     def get_decks(self):
         return self.decks
+
+    def get_difficulty(self):
+        return self.difficulty
     
     def set_rounds(self, rounds):
         self.rounds = rounds
 
     def set_decks(self, decks):
         self.decks = decks
-    
+        
+    def set_difficulty(self, difficulty):
+        self.difficulty = difficulty
+        
     def reset_game(self):
         self.my_hand = [] # current cards in player hand
         self.dealer_hand = [] # current cards in dealer hand
@@ -64,7 +70,7 @@ class Game:
         for result in self.prolog.query("current_deck(Cards)"):
             print("Current Deck:", result["Cards"])
             
-         # Re-initialize the deck in Prolog
+        # Re-initialize the deck in Prolog
         list(self.prolog.query(f"initialize_deck({self.decks})"))
         print("Game state reset")
     
@@ -154,17 +160,77 @@ class Game:
         print("Failed to calculate score")
         return 0
 
+    # def dealer_turn(self):
+    #     self.reveal_dealer = True
+        
+    #     # Convert Python list to Prolog list format
+    #     dealer_hand = str(self.dealer_hand).replace('[', '[').replace(']', ']')
+        
+    #     # Use Prolog's dealer_play predicate
+    #     query = f"dealer_play({dealer_hand}, {self.dealer_score}, FinalHand, FinalScore)"
+    #     for result in self.prolog.query(query):
+    #         self.dealer_hand = list(result["FinalHand"])
+    #         self.dealer_score = result["FinalScore"]
+    
     def dealer_turn(self):
         self.reveal_dealer = True
-        
-        # Convert Python list to Prolog list format
+
+        # Convert dealer's hand to Prolog-compatible format
         dealer_hand = str(self.dealer_hand).replace('[', '[').replace(']', ']')
-        
-        # Use Prolog's dealer_play predicate
-        query = f"dealer_play({dealer_hand}, {self.dealer_score}, FinalHand, FinalScore)"
-        for result in self.prolog.query(query):
-            self.dealer_hand = list(result["FinalHand"])
-            self.dealer_score = result["FinalScore"]
+        dealer_score = self.dealer_score
+        player_score = self.player_score
+
+        # Query the current deck from Prolog
+        deck_query = list(self.prolog.query("current_deck(Cards)"))
+        if not deck_query:
+            print("Error: Unable to retrieve the current deck from Prolog.")
+            return
+        current_deck = deck_query[0]["Cards"]
+        print(f"Current Deck: {current_deck}")
+
+        # Convert the deck into Prolog-compatible format
+        prolog_deck = str(current_deck).replace('[', '[').replace(']', ']')
+
+        while True:
+            # Query Prolog for the dealer's action
+            query = f"dealer_decision({self.difficulty}, {dealer_hand}, {dealer_score}, {player_score}, {prolog_deck}, Action)"
+            print(f"Querying dealer_decision with: {query}")
+            result = list(self.prolog.query(query))
+            
+            if not result:
+                print("Error: Prolog query did not return a result.")
+                break
+            
+            action = result[0]["Action"]
+            print(f"Dealer Decision: {action}")
+
+            if action == "hit":
+                # Query Prolog to draw a card
+                card_result = list(self.prolog.query("draw_card(Card)"))
+                if card_result:
+                    new_card = card_result[0]["Card"]
+                    self.dealer_hand.append(new_card)
+
+                    # Recalculate the dealer's score
+                    self.dealer_score = self.calculate_hand_score(self.dealer_hand)
+                    print(f"Dealer hits and gets: {new_card}, new score: {self.dealer_score}")
+
+                    # Check if the dealer busts
+                    if self.dealer_score > 21:
+                        print("Dealer busts!")
+                        break
+                else:
+                    print("Error: No cards left in the deck.")
+                    break
+
+            elif action == "stand":
+                print("Dealer stands.")
+                break
+            else:
+                print("Unexpected action:", action)
+                break
+
+
 
     def check_winner(self):
         if not self.hand_active:
