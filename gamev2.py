@@ -286,12 +286,6 @@ class Game:
             
             # Decrement rounds count
             self.rounds -= 1
-            print("rounds left", self.rounds)
-
-            # If no more rounds are left, end the game
-            if self.rounds <= 0:
-                # self.active = False  # Set game to inactive (no more rounds)
-                self.outcome = self.calculate_game_result()  # Calculate final result
 
     # draw game screen
     def draw(self):
