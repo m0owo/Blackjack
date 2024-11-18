@@ -20,14 +20,20 @@ class Game:
         self.screen = screen
         self.screen_width, self.screen_height = self.screen.get_size()
 
-        # set font sizes
-        font_size = 44
-        smaller_font_size = 36
-        self.font = pygame.font.Font('freesansbold.ttf', font_size)
-        self.smaller_font = pygame.font.Font('freesansbold.ttf', smaller_font_size)
+        # set width and height
+        self.WIDTH = self.screen.get_width()
+        self.HEIGHT = self.screen.get_height()
 
+        # set font sizes
+        self.rubik_font = pygame.font.SysFont("rubikbubblesregular", 65)
+        self.font = pygame.font.SysFont("questrialregular", 45)
+        self.small_font = pygame.font.SysFont("questrialregular", 30)
         # the end game button
-        self.next_round_button = pygame.draw.rect(self.screen, 'white', [0, 0, 0, 0], 0, 5)
+        self.next_round_button = pygame.draw.rect(self.screen, 'white', [0, 0, 0, 0], 0, border_radius=15)
+
+        self.hit_button = pygame.Rect(135, 725, 250, 80)
+        self.stand_button = pygame.Rect(420, 725, 250, 80)
+        self.next_round_button = pygame.Rect(270,740,250, 80)
 
         # init game settings
         self.game_result = 0 # the overall final result of the game
@@ -93,7 +99,29 @@ class Game:
             print("Current Deck:", result["Cards"])
         print("deck initialized")
 
+    def draw_gradient_background(self):
+        # Draw a radial gradient background
+        center_x = self.WIDTH // 2
+        center_y = self.HEIGHT // 2
+        max_radius = max(self.WIDTH, self.HEIGHT) // 2
+
+        for radius in range(max_radius, 0, -1):
+            # Calculate the color for the current circle
+            t = radius / max_radius
+            r = int((1 - t) * 128 + t * 255)  # Blend purple (128) and white (255)
+            g = int((1 - t) * 0 + t * 255)    # Blend purple (0) and white (255)
+            b = int((1 - t) * 128 + t * 255)  # Blend purple (128) and white (255)
+
+            color = (r, g, b)
+            pygame.draw.circle(self.screen, color, (center_x, center_y), radius)
+
     def draw(self):
+
+        self.draw_gradient_background()
+        RED = (236, 30, 30)
+        GREEN = (67, 223, 103)
+        YELLOW = (240, 231, 104)
+
         self.draw_cards()
         self.draw_scores()
         self.draw_game()
@@ -132,12 +160,12 @@ class Game:
         dealer = self.dealer_score
 
         # player score
-        p_x = 400
-        p_y = 450
+        p_x = 500
+        p_y = 480
 
         #dealer score
-        d_x = 400
-        d_y = 150
+        d_x = 500
+        d_y = 180
 
         self.screen.blit(self.font.render(f'Score[{player}]', True, 'white'), (p_x, p_y))
         if self.outcome != 0:
@@ -172,21 +200,9 @@ class Game:
         record = self.records
         result = self.outcome
 
-        # hit button
-        h_top_left_x = 100
-        h_top_left_y = 725
-
-        # stand button
-        s_top_left_x = 400
-        s_top_left_y = 725
-
-        # next round button
-        n_top_left_x = 250
-        n_top_left_y = 725
-
         # score text
-        all_scores_x = 150
-        all_scores_y = 25
+        all_scores_x = 250
+        all_scores_y = 90
 
         # button dimensions
         button_width = 300
@@ -199,7 +215,7 @@ class Game:
         button_list = []
 
         # display the current wins, losses, and ties
-        score_text = self.smaller_font.render(f'Wins: {record[0]}   Losses: {record[1]}   Draws: {record[2]}', True, 'white')
+        score_text = self.small_font.render(f'Wins: {record[0]}   Losses: {record[1]}   Draws: {record[2]}', True, 'black')
         self.screen.blit(score_text, (all_scores_x, all_scores_y))
 
         if result == 0:
@@ -226,12 +242,18 @@ class Game:
                     hit_color = '#90EE90'  # Light green
                     hit_border_color = '#006400'  # Dark green
                 
-                self.hit_button = pygame.draw.rect(self.screen, hit_color, 
-                    [h_top_left_x, h_top_left_y, button_width, button_height], 0, 5)
-                pygame.draw.rect(self.screen, hit_border_color, 
-                    [h_top_left_x, h_top_left_y, button_width, button_height], 3, 5)
+                #self.hit_button = pygame.draw.rect(self.screen, hit_color, 
+                #    [h_top_left_x, h_top_left_y, button_width, button_height], 0,border_radius=15)
+                #pygame.draw.rect(self.screen, hit_border_color, 
+                #    [h_top_left_x, h_top_left_y, button_width, button_height], 3, border_radius=15)
+
+               
+                pygame.draw.rect(self.screen, hit_color, self.hit_button, border_radius=15)  # Draw filled button
+                pygame.draw.rect(self.screen, hit_border_color, self.hit_button, width=2, border_radius=15)  # Draw border
+
                 hit_text = self.font.render('HIT ME', True, 'black')
-                self.screen.blit(hit_text, (h_top_left_x + 55, h_top_left_y + 25))
+                self.screen.blit(hit_text, hit_text.get_rect(center=self.hit_button.center))
+
                 
                 # Stand button
                 stand_color = 'white'
@@ -239,17 +261,17 @@ class Game:
                 if suggestion == 'stand':
                     stand_color = '#90EE90'  # Light green
                     stand_border_color = '#006400'  # Dark green
-                    
-                self.stand_button = pygame.draw.rect(self.screen, stand_color,
-                    [s_top_left_x, s_top_left_y, button_width, button_height], 0, 5)
-                pygame.draw.rect(self.screen, stand_border_color,
-                    [s_top_left_x, s_top_left_y, button_width, button_height], 3, 5)
+
+                pygame.draw.rect(self.screen, stand_color, self.stand_button, border_radius=15)  # Draw filled button
+                pygame.draw.rect(self.screen, stand_border_color, self.stand_button, width=2, border_radius=15)  # Draw border
+
                 stand_text = self.font.render('STAND', True, 'black')
-                self.screen.blit(stand_text, (s_top_left_x + 55, s_top_left_y + 25))
+                self.screen.blit(stand_text, stand_text.get_rect(center=self.stand_button.center))
+                    
                 
                 # Display win probability
-                prob_text = self.smaller_font.render(f'Win Probability: {probability:.1%}', True, 'white')
-                self.screen.blit(prob_text, (300, 675))
+                prob_text = self.small_font.render(f'Win Probability: {probability:.1%}', True, 'white')
+                self.screen.blit(prob_text, (280, 830))
                 
                 button_list.append(self.hit_button)
                 button_list.append(self.stand_button)
@@ -258,7 +280,7 @@ class Game:
             elif self.turn =='dealer':
                 # dont draw the buttons and instead show that its dealer's turn
                 dealer_turn_text = self.smaller_font.render(f"Dealer's Turn", True, 'Red')
-                self.screen.blit(dealer_turn_text, (outcome_x, s_top_left_y))
+                self.screen.blit(dealer_turn_text, (outcome_x, 725))
                 start_ticks = pygame.time.get_ticks()
                 while pygame.time.get_ticks() - start_ticks < 1000:
                     pygame.display.update()
@@ -277,15 +299,16 @@ class Game:
                 outcome_text = self.font.render("Dealer Wins!", True, 'red')
             elif result == TIE:
                 outcome_text = self.font.render("It's a Draw!", True, 'yellow')
-            self.screen.blit(outcome_text, (outcome_x, outcome_y))
+            self.screen.blit(outcome_text, (320,130 ))
 
             # add a button to move on
-            self.next_round_button = pygame.draw.rect(self.screen, 'white', [n_top_left_x, n_top_left_y, button_width, button_height], 0, 5)
+            pygame.draw.rect(self.screen, 'white', self.next_round_button, 0, border_radius=15)
             if self.rounds != 0:
                 next_round_text = self.font.render('Next Round', True, 'black')
             else:
                 next_round_text = self.font.render('End Game', True, 'black')
-            self.screen.blit(next_round_text, (n_top_left_x + 30, n_top_left_y + 25))
+           
+            self.screen.blit(next_round_text, next_round_text.get_rect(center=self.next_round_button.center))
             pygame.display.update()
 
     def handle_event(self, event):
@@ -351,7 +374,7 @@ class Game:
 
             if action == "hit":
                 # show the dealer decision
-                dealer_decision = self.smaller_font.render("Dealer Hit", True, 'Red')
+                dealer_decision = self.small_font.render("Dealer Hit", True, 'Red')
                 self.player_stood = False
 
                 # draw a card
@@ -364,7 +387,7 @@ class Game:
                     self.turn = "player"
             elif action == "stand":
                 # show dealer decision
-                dealer_decision = self.smaller_font.render("Dealer Stand", True, 'Red')
+                dealer_decision = self.small_font.render("Dealer Stand", True, 'Red')
                 self.dealer_stood = True
 
                 self.turn = "player"
@@ -372,7 +395,7 @@ class Game:
         # clear the screen and redraw the screen
         self.screen.fill('black')
         self.draw()
-        self.screen.blit(dealer_decision, (275, 100))
+        self.screen.blit(dealer_decision, (340, 130))
 
         # wait a bit
         start_ticks = pygame.time.get_ticks()
