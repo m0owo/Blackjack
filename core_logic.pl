@@ -92,13 +92,13 @@ dealer_play(DealerHand, DealerScore, FinalHand, FinalScore) :-
         FinalScore = DealerScore
     ).
 
-% Determine the winner
 determine_winner(PlayerScore, DealerScore, Result) :-
-    (PlayerScore > 21 -> Result = dealer_wins;
-     DealerScore > 21 -> Result = player_wins;
-     PlayerScore > DealerScore -> Result = player_wins;
-     DealerScore > PlayerScore -> Result = dealer_wins;
-     Result = draw).
+    (PlayerScore > 21, DealerScore > 21 -> Result = draw;           % Both bust
+     PlayerScore > 21 -> Result = dealer_wins;                      % Player busts
+     DealerScore > 21 -> Result = player_wins;                      % Dealer busts
+     21 - PlayerScore < 21 - DealerScore -> Result = player_wins;   % Closest to 21
+     21 - DealerScore < 21 - PlayerScore -> Result = dealer_wins;   % Closest to 21
+     Result = draw).                                                % Scores are equal
 
 % Initial deal
 initial_deal(PlayerHand, DealerHand) :-
