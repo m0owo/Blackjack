@@ -64,9 +64,7 @@ while running:
             # game has run its course
             if game.handle_event(event):
                 restart.set_result(game.game_result)
-                if event.type == pygame.MOUSEBUTTONUP:
-                    if game.next_round_button.collidepoint(event.pos):
-                        game_over = True 
+                game_over = True 
         elif game_over:
             if event.type == pygame.MOUSEBUTTONUP:
                 # click retry
