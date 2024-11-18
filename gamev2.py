@@ -266,7 +266,7 @@ class Game:
             for result in self.prolog.query(query):
                 winner = result["Result"]
                 if winner == "dealer_wins":
-                    self.outcome = DEALER_WIN
+                    self.outcome = PLAYER_BUST if self.player_score > 21 else DEALER_WIN
                 elif winner == "player_wins":
                     self.outcome = PLAYER_WIN
                 else:  # draw
