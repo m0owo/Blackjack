@@ -98,7 +98,7 @@ while running:
                     setting_ = False 
                     game.set_rounds(setting.get_rounds())
                     game.set_decks(setting.get_decks())
-                    game.set_decks(setting.get_decks())
+                    game.set_difficulty(setting.get_difficulty())
                 # increase/decrease decks/rounds
                 if setting.add_deck_button.collidepoint(event.pos):
                     setting.add_deck()
