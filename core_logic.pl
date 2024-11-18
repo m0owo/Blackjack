@@ -155,9 +155,27 @@ simulate_hit(DealerHand, DealerScore, Deck, NewScore, ProbHit) :-
 simulate_stand(DealerScore, PlayerScore, Deck, ProbStand) :-
     win_probability(DealerScore, PlayerScore, Deck, ProbStand).
 
-% Win probability calculation based on remaining cards and scores
-win_probability(DealerScore, PlayerScore, Deck, Probability) :-
-    (DealerScore > 21 -> Probability = -1; % Dealer busts
-     PlayerScore > 21 -> Probability = 1; % Player busts
-     DealerScore > PlayerScore -> Probability = 0.7; % Likely win
-     DealerScore =< PlayerScore -> Probability = 0.3). % Likely loss
+% Update win_probability to evaluate against Player's visible score
+win_probability(DealerScore, PlayerVisibleScore, Deck, Probability) :-
+    findall(HiddenCard, member(HiddenCard, Deck), HiddenCards),
+    calculate_possible_player_scores(PlayerVisibleScore, HiddenCards, PlayerPossibleScores),
+    evaluate_outcomes(DealerScore, PlayerPossibleScores, Probability).
+
+% Evaluate possible player scores based on visible score and hidden card
+calculate_possible_player_scores(PlayerVisibleScore, HiddenCards, PlayerScores) :-
+    findall(FinalScore, (
+        member(Card, HiddenCards),
+        card_value(Card, Value),
+        FinalScore is PlayerVisibleScore + Value
+    ), PlayerScores).
+
+% Evaluate dealer's probability of winning against player's possible scores
+evaluate_outcomes(DealerScore, PlayerScores, Probability) :-
+    include(>(21), PlayerScores, BustScores), % Player busts
+    length(BustScores, PlayerBusts),
+    length(PlayerScores, TotalScores),
+    WinProbability is PlayerBusts / TotalScores,
+    (DealerScore > 21 -> Probability = -1 ; % Dealer busts
+     DealerScore >= 17, 
+     WinProbability > 0.5 -> Probability = 0.7 ; % Dealer likely wins
+     Probability = 0.3). % Otherwise, dealer likely loses.
