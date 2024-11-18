@@ -22,7 +22,7 @@ game_over = False
 
 while running:
     # clear the screen 
-    screen.fill('white')
+    screen.fill('black')
 
     # determine which page
     if not in_game and not setting_:
