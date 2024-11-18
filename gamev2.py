@@ -180,7 +180,6 @@ class Game:
     #         self.dealer_score = result["FinalScore"]
     
     def dealer_turn(self):
-        self.reveal_dealer = True
         dealer_hand = str(self.dealer_hand).replace('[', '[').replace(']', ']')
         dealer_score = self.dealer_score
         player_score = self.player_score
@@ -296,6 +295,8 @@ class Game:
         self.screen.blit(self.font.render(f'Score[{player}]', True, 'white'), (350, 400))
         if self.reveal_dealer:
             self.screen.blit(self.font.render(f'Score[{dealer}]', True, 'white'), (350, 100))
+        else:
+            self.screen.blit(self.font.render(f'Score[{self.calculate_hand_score(self.dealer_hand[1:])}] + ???', True, 'white'), (350, 100))
 
     def draw_game(self, act, record, result):
         button_list = []
