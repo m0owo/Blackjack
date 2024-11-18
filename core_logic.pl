@@ -179,3 +179,56 @@ evaluate_outcomes(DealerScore, PlayerScores, Probability) :-
      DealerScore >= 17, 
      WinProbability > 0.5 -> Probability = 0.7 ; % Dealer likely wins
      Probability = 0.3). % Otherwise, dealer likely loses.
+
+
+% Basic strategy recommendation based on player's hand and dealer's visible card
+suggest_move(PlayerHand, DealerUpCard, Suggestion) :-
+    calculate_hand_score(PlayerHand, PlayerScore),
+    card_value(DealerUpCard, DealerValue),
+    (
+        % If player has Ace and value is <= 21, treat as soft hand
+        member('A', PlayerHand),
+        PlayerScore =< 21 ->
+        suggest_move_soft(PlayerScore, DealerValue, Suggestion)
+    ;
+        % Otherwise treat as hard hand
+        suggest_move_hard(PlayerScore, DealerValue, Suggestion)
+    ).
+
+% Suggestions for hard hands (no usable Ace)
+suggest_move_hard(PlayerScore, DealerValue, Suggestion) :-
+    (
+        PlayerScore >= 17 -> Suggestion = stand
+    ;   PlayerScore =< 11 -> Suggestion = hit
+    ;   PlayerScore >= 12, PlayerScore =< 16 ->
+        (DealerValue >= 7 -> Suggestion = hit ; Suggestion = stand)
+    ).
+
+% Suggestions for soft hands (with usable Ace)
+suggest_move_soft(PlayerScore, DealerValue, Suggestion) :-
+    (
+        PlayerScore >= 19 -> Suggestion = stand
+    ;   PlayerScore =< 17 -> Suggestion = hit
+    ;   PlayerScore = 18 ->
+        (DealerValue >= 9 -> Suggestion = hit ; Suggestion = stand)
+    ).
+
+% Calculate win probability for current hand
+calculate_win_probability(PlayerHand, DealerUpCard, Probability) :-
+    calculate_hand_score(PlayerHand, PlayerScore),
+    card_value(DealerUpCard, DealerValue),
+    (
+        PlayerScore > 21 -> Probability = 0.0  % Bust
+    ;   PlayerScore = 21 -> Probability = 0.9  % Blackjack
+    ;   calculate_probability(PlayerScore, DealerValue, Probability)
+    ).
+
+% Helper predicate to calculate win probability based on scores
+calculate_probability(PlayerScore, DealerValue, Probability) :-
+    (
+        PlayerScore >= 17 -> 
+            (DealerValue >= 7 -> Probability = 0.4 ; Probability = 0.7)
+    ;   PlayerScore =< 11 -> Probability = 0.6
+    ;   PlayerScore >= 12, PlayerScore =< 16 ->
+            (DealerValue >= 7 -> Probability = 0.3 ; Probability = 0.5)
+    ).

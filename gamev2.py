@@ -144,6 +144,29 @@ class Game:
             self.screen.blit(self.font.render(f'Score[{dealer}]', True, 'white'), (d_x, d_y))
         else:
             self.screen.blit(self.font.render(f'Score[{self.calculate_hand_score(self.dealer_hand[1:])}] + ???', True, 'white'), (d_x, d_y))
+            
+    def get_suggestion(self):
+        if not self.dealer_hand or not self.my_hand:
+            return None, 0.0
+                
+        # Convert hands to Prolog format
+        player_hand = str(self.my_hand).replace('[', '[').replace(']', ']')
+        dealer_up_card = self.dealer_hand[1]  # Using the visible card
+                
+        # Query Prolog for suggestion
+        query = f"suggest_move({player_hand}, '{dealer_up_card}', Suggestion)"
+        suggestion = None
+        for result in self.prolog.query(query):
+            suggestion = result["Suggestion"]
+                
+        # Get win probability
+        probability = 0.0
+        prob_query = f"calculate_win_probability({player_hand}, '{dealer_up_card}', Probability)"
+        for result in self.prolog.query(prob_query):
+            probability = result["Probability"]
+                
+        return suggestion, probability        
+
 
     def draw_game(self):
         record = self.records
@@ -172,6 +195,8 @@ class Game:
         # outcome text
         outcome_x = 275
         outcome_y = 725
+        
+        button_list = []
 
         # display the current wins, losses, and ties
         score_text = self.smaller_font.render(f'Wins: {record[0]}   Losses: {record[1]}   Draws: {record[2]}', True, 'white')
@@ -181,16 +206,53 @@ class Game:
             # if it is the player's turn and round is ongoing
             if self.turn == "player":
                 # draw the hit button
-                self.hit_button = pygame.draw.rect(self.screen, 'white', [h_top_left_x, h_top_left_y, button_width, button_height], 0, 5)
-                pygame.draw.rect(self.screen, 'green', [h_top_left_x, h_top_left_y, button_width, button_height], 3, 5)
+                # self.hit_button = pygame.draw.rect(self.screen, 'white', [h_top_left_x, h_top_left_y, button_width, button_height], 0, 5)
+                # pygame.draw.rect(self.screen, 'green', [h_top_left_x, h_top_left_y, button_width, button_height], 3, 5)
+                # hit_text = self.font.render('HIT ME', True, 'black')
+                # self.screen.blit(hit_text, (h_top_left_x + 55, h_top_left_y + 25))
+
+                # # draw the stand button
+                # self.stand_button = pygame.draw.rect(self.screen, 'white', [s_top_left_x, s_top_left_y, button_width, button_height], 0, 5)
+                # pygame.draw.rect(self.screen, 'green', [s_top_left_x, s_top_left_y, button_width, button_height], 3, 5)
+                # stand_text = self.font.render('STAND', True, 'black')
+                # self.screen.blit(stand_text, (s_top_left_x + 55, s_top_left_y + 25))
+                            # Get suggestion and probability
+                suggestion, probability = self.get_suggestion()
+                
+                # Hit button
+                hit_color = 'white'
+                hit_border_color = 'green'
+                if suggestion == 'hit':
+                    hit_color = '#90EE90'  # Light green
+                    hit_border_color = '#006400'  # Dark green
+                
+                self.hit_button = pygame.draw.rect(self.screen, hit_color, 
+                    [h_top_left_x, h_top_left_y, button_width, button_height], 0, 5)
+                pygame.draw.rect(self.screen, hit_border_color, 
+                    [h_top_left_x, h_top_left_y, button_width, button_height], 3, 5)
                 hit_text = self.font.render('HIT ME', True, 'black')
                 self.screen.blit(hit_text, (h_top_left_x + 55, h_top_left_y + 25))
-
-                # draw the stand button
-                self.stand_button = pygame.draw.rect(self.screen, 'white', [s_top_left_x, s_top_left_y, button_width, button_height], 0, 5)
-                pygame.draw.rect(self.screen, 'green', [s_top_left_x, s_top_left_y, button_width, button_height], 3, 5)
+                
+                # Stand button
+                stand_color = 'white'
+                stand_border_color = 'green'
+                if suggestion == 'stand':
+                    stand_color = '#90EE90'  # Light green
+                    stand_border_color = '#006400'  # Dark green
+                    
+                self.stand_button = pygame.draw.rect(self.screen, stand_color,
+                    [s_top_left_x, s_top_left_y, button_width, button_height], 0, 5)
+                pygame.draw.rect(self.screen, stand_border_color,
+                    [s_top_left_x, s_top_left_y, button_width, button_height], 3, 5)
                 stand_text = self.font.render('STAND', True, 'black')
                 self.screen.blit(stand_text, (s_top_left_x + 55, s_top_left_y + 25))
+                
+                # Display win probability
+                prob_text = self.smaller_font.render(f'Win Probability: {probability:.1%}', True, 'white')
+                self.screen.blit(prob_text, (300, 675))
+                
+                button_list.append(self.hit_button)
+                button_list.append(self.stand_button)
 
             # if it is the dealer's turn and the round is ongoing
             elif self.turn =='dealer':
