@@ -89,3 +89,5 @@ class Setting:
         self.screen.blit(back_text, (160, 525))
 
         pygame.display.update()
+
+
