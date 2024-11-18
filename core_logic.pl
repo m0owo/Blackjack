@@ -13,28 +13,40 @@ card_value('Q', 10).
 card_value('K', 10).
 card_value('A', 11).
 
-% Calculate hand score, adjusting Aces to avoid going over 21
+# calculate_score([], 0).
+# calculate_score([Card | Rest], Score) :-
+#     card_value(Card, Value),
+#     calculate_score(Rest, RestScore),
+#     TempScore is RestScore + Value,
+#     (TempScore =< 21 -> Score = TempScore; adjust_for_aces([Card | Rest], TempScore, Score)).
+
+% Base case for calculating score
 calculate_score([], 0).
 calculate_score([Card | Rest], Score) :-
     card_value(Card, Value),
     calculate_score(Rest, RestScore),
-    TempScore is RestScore + Value,
-    (TempScore =< 21 -> Score = TempScore ;adjust_for_aces([Card | Rest], TempScore, Score)).
+    Score is RestScore + Value.
 
 % Adjust score if Aces are present and score > 21
 adjust_for_aces(Hand, Score, AdjustedScore) :-
-    include(==('A'), Hand, Aces),
+    include(==( 'A'), Hand, Aces),
     length(Aces, NumAces),
-    adjust_ace_value(NumAces, Score, AdjustedScore).
+    adjust_ace_value(NumAces, Score, AdjustedScore), !. % Prevent backtracking after adjustment
 
-adjust_ace_value(0, Score, Score).
+% Adjust Ace value if necessary
+adjust_ace_value(0, Score, Score) :- !.
 adjust_ace_value(NumAces, Score, AdjustedScore) :-
     Score > 21,
-    NewScore is Score - 10,
+    NumAces > 0,
+    NewScore is Score - 10,  % Reduce the score by 10 for each Ace as needed
     NewNumAces is NumAces - 1,
     adjust_ace_value(NewNumAces, NewScore, AdjustedScore).
-adjust_ace_value(_, Score, Score) :-
-    Score =< 21.
+adjust_ace_value(_, Score, Score).
+
+% Main predicate for calculating the score of a hand
+calculate_hand_score(Hand, FinalScore) :-
+    calculate_score(Hand, InitialScore),
+    adjust_for_aces(Hand, InitialScore, FinalScore).
 
 :- dynamic current_deck/1.
 
