@@ -5,7 +5,7 @@ from restart import Restart
 from setting import Setting
 
 pygame.init()
-screen = pygame.display.set_mode((600, 900))
+screen = pygame.display.set_mode((800, 900))
 pygame.display.set_caption("Blackjack Game")
 
 menu = Menu(screen)
@@ -64,7 +64,9 @@ while running:
             # game has run its course
             if game.handle_event(event):
                 restart.set_result(game.game_result)
-                game_over = True 
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if game.next_round_button.collidepoint(event.pos):
+                        game_over = True 
         elif game_over:
             if event.type == pygame.MOUSEBUTTONUP:
                 # click retry
