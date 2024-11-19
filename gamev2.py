@@ -393,7 +393,7 @@ class Game:
                 self.turn = "player"
         
         # clear the screen and redraw the screen
-        self.screen.fill('black')
+        self.screen.fill('white')
         self.draw()
         self.screen.blit(dealer_decision, (340, 130))
 
